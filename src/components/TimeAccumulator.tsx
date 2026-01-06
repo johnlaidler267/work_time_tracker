@@ -99,6 +99,11 @@ export default function TimeAccumulator() {
     }));
   };
 
+  const adjustMinutes = (amount: number) => {
+    if (minutes + amount < 0) return; // Prevent negative time
+    addMinutes(amount);
+  };
+
   const reset = () => {
     setMinutes(0);
     localStorage.removeItem(STORAGE_KEY);
@@ -125,8 +130,52 @@ export default function TimeAccumulator() {
     <div className="flex items-center justify-center min-h-screen bg-neutral-100">
       <div className="w-80 rounded-2xl bg-white shadow-sm p-6 flex flex-col gap-6">
         <div className="text-center">
-          <div className="text-4xl font-semibold tabular-nums">
-            {hours}h {mins}m
+          <div className="flex items-center justify-center gap-2">
+            <div className="text-4xl font-semibold tabular-nums">
+              {hours}h {mins}m
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <button
+                onClick={() => adjustMinutes(1)}
+                className="text-neutral-400 hover:text-neutral-600 active:text-neutral-900 transition-colors p-0.5 rounded hover:bg-neutral-100 active:scale-95"
+                aria-label="Increase by 1 minute"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2}
+                  stroke="currentColor"
+                  className="w-4 h-4"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M4.5 15.75l7.5-7.5 7.5 7.5"
+                  />
+                </svg>
+              </button>
+              <button
+                onClick={() => adjustMinutes(-1)}
+                className="text-neutral-400 hover:text-neutral-600 active:text-neutral-900 transition-colors p-0.5 rounded hover:bg-neutral-100 active:scale-95"
+                aria-label="Decrease by 1 minute"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2}
+                  stroke="currentColor"
+                  className="w-4 h-4"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M19.5 8.25l-7.5 7.5-7.5-7.5"
+                  />
+                </svg>
+              </button>
+            </div>
           </div>
           <div className="text-sm text-neutral-500 mt-1">Total Time</div>
         </div>
