@@ -1,6 +1,31 @@
 import { useState, useEffect } from "react";
 
 const STORAGE_KEY = "workTimeMinutes";
+const DAILY_STORAGE_KEY = "workTimeDaily";
+const LAST_DATE_KEY = "workTimeLastDate";
+
+// Get today's date as YYYY-MM-DD string
+const getTodayString = () => {
+  const today = new Date();
+  return today.toISOString().split('T')[0];
+};
+
+// Get the last 7 days as date strings
+const getLast7Days = () => {
+  const days = [];
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    days.push(date.toISOString().split('T')[0]);
+  }
+  return days;
+};
+
+// Get day name abbreviation
+const getDayName = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', { weekday: 'short' });
+};
 
 export default function TimeAccumulator() {
   // Load initial value from localStorage
@@ -9,22 +34,92 @@ export default function TimeAccumulator() {
     return saved ? parseInt(saved, 10) : 0;
   });
 
+  // Load and manage daily totals
+  const [dailyTotals, setDailyTotals] = useState<Record<string, number>>(() => {
+    const saved = localStorage.getItem(DAILY_STORAGE_KEY);
+    const lastDate = localStorage.getItem(LAST_DATE_KEY);
+    const today = getTodayString();
+    
+    if (saved && lastDate) {
+      const parsed = JSON.parse(saved);
+      // Check if we need to reset today's total (new day)
+      if (lastDate !== today) {
+        // Keep only the last 7 days
+        const last7Days = getLast7Days();
+        const filtered: Record<string, number> = {};
+        last7Days.forEach(day => {
+          if (parsed[day] !== undefined) {
+            filtered[day] = parsed[day];
+          }
+        });
+        filtered[today] = 0;
+        localStorage.setItem(LAST_DATE_KEY, today);
+        return filtered;
+      }
+      return parsed;
+    }
+    localStorage.setItem(LAST_DATE_KEY, today);
+    return { [today]: 0 };
+  });
+
   // Save to localStorage whenever minutes changes
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, minutes.toString());
   }, [minutes]);
 
+  // Save daily totals to localStorage
+  useEffect(() => {
+    localStorage.setItem(DAILY_STORAGE_KEY, JSON.stringify(dailyTotals));
+  }, [dailyTotals]);
+
+  // Check if it's a new day and reset daily tracking
+  useEffect(() => {
+    const today = getTodayString();
+    const lastDate = localStorage.getItem(LAST_DATE_KEY);
+    if (lastDate !== today) {
+      const last7Days = getLast7Days();
+      const filtered: Record<string, number> = {};
+      last7Days.forEach(day => {
+        if (dailyTotals[day] !== undefined) {
+          filtered[day] = dailyTotals[day];
+        }
+      });
+      filtered[today] = 0;
+      localStorage.setItem(LAST_DATE_KEY, today);
+      setDailyTotals(filtered);
+    }
+  }, [dailyTotals]);
+
   const addMinutes = (amount: number) => {
     setMinutes(m => m + amount);
+    const today = getTodayString();
+    setDailyTotals(prev => ({
+      ...prev,
+      [today]: (prev[today] || 0) + amount,
+    }));
   };
 
   const reset = () => {
     setMinutes(0);
     localStorage.removeItem(STORAGE_KEY);
+    const today = getTodayString();
+    setDailyTotals({ [today]: 0 });
+    localStorage.setItem(LAST_DATE_KEY, today);
   };
 
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
+
+  // Get weekly data for display
+  const weeklyData = getLast7Days().map(date => ({
+    date,
+    dayName: getDayName(date),
+    minutes: dailyTotals[date] || 0,
+    isToday: date === getTodayString(),
+  }));
+
+  // Find max minutes for scaling the bars
+  const maxMinutes = Math.max(...weeklyData.map(d => d.minutes), 1);
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-neutral-100">
@@ -57,6 +152,44 @@ export default function TimeAccumulator() {
         >
           Reset
         </button>
+
+        {/* Weekly Daily Time Indicator */}
+        <div className="pt-4 border-t border-neutral-100">
+          <div className="text-xs font-medium text-neutral-500 mb-3 text-center">
+            This Week
+          </div>
+          <div className="flex items-end justify-between gap-1.5">
+            {weeklyData.map(({ date, dayName, minutes, isToday }) => {
+              const heightPercent = (minutes / maxMinutes) * 100;
+              const hours = Math.floor(minutes / 60);
+              const mins = minutes % 60;
+              
+              return (
+                <div key={date} className="flex-1 flex flex-col items-center gap-1.5">
+                  <div className="w-full flex flex-col items-center gap-1">
+                    <div
+                      className={`w-full rounded-t transition-all ${
+                        isToday ? 'bg-neutral-900' : 'bg-neutral-200'
+                      }`}
+                      style={{ height: `${Math.max(heightPercent, 4)}%`, minHeight: '4px' }}
+                      title={`${dayName}: ${hours}h ${mins}m`}
+                    />
+                    <div className={`text-[10px] font-medium ${
+                      isToday ? 'text-neutral-900' : 'text-neutral-400'
+                    }`}>
+                      {hours > 0 ? `${hours}h` : mins > 0 ? `${mins}m` : ''}
+                    </div>
+                  </div>
+                  <div className={`text-[10px] ${
+                    isToday ? 'text-neutral-900 font-semibold' : 'text-neutral-400'
+                  }`}>
+                    {dayName}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
     </div>
   );
