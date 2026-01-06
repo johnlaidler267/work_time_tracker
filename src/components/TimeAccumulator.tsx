@@ -1,13 +1,27 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+const STORAGE_KEY = "workTimeMinutes";
 
 export default function TimeAccumulator() {
-  const [minutes, setMinutes] = useState(0);
+  // Load initial value from localStorage
+  const [minutes, setMinutes] = useState(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? parseInt(saved, 10) : 0;
+  });
+
+  // Save to localStorage whenever minutes changes
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, minutes.toString());
+  }, [minutes]);
 
   const addMinutes = (amount: number) => {
     setMinutes(m => m + amount);
   };
 
-  const reset = () => setMinutes(0);
+  const reset = () => {
+    setMinutes(0);
+    localStorage.removeItem(STORAGE_KEY);
+  };
 
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
