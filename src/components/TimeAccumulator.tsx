@@ -226,7 +226,7 @@ export default function TimeAccumulator() {
                     <div className={`text-[10px] font-medium ${
                       isToday ? 'text-neutral-900' : 'text-neutral-400'
                     }`}>
-                      {hours > 0 ? `${hours}h` : mins > 0 ? `${mins}m` : ''}
+                      {hours > 0 ? `${hours}h ${mins}m` : mins > 0 ? `${mins}m` : ''}
                     </div>
                   </div>
                   <div className={`text-[10px] ${
