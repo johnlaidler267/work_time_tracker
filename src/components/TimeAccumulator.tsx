@@ -3,6 +3,8 @@ import { useState, useEffect } from "react";
 const STORAGE_KEY = "workTimeMinutes";
 const DAILY_STORAGE_KEY = "workTimeDaily";
 const LAST_DATE_KEY = "workTimeLastDate";
+const WEEKLY_TOTALS_KEY = "workTimeWeekly";
+const LAST_WEEK_KEY = "workTimeLastWeek";
 
 // Get today's date as YYYY-MM-DD string (local time)
 const getTodayString = () => {
@@ -25,6 +27,15 @@ const formatLocalDate = (date: Date) => {
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
+};
+
+// Get the Sunday date of the week containing a specific date (week key)
+const getWeekKey = (dateString: string) => {
+  const date = parseLocalDate(dateString);
+  const dayOfWeek = date.getDay(); // 0 = Sunday, 6 = Saturday
+  const sunday = new Date(date);
+  sunday.setDate(date.getDate() - dayOfWeek);
+  return formatLocalDate(sunday);
 };
 
 // Get the week containing a specific date (Sunday to Saturday)
@@ -60,10 +71,23 @@ export default function TimeAccumulator() {
   // Track which day is being viewed (0 = today, -1 = yesterday, 1 = tomorrow, etc.)
   const [dayOffset, setDayOffset] = useState(0);
 
-  // Load initial value from localStorage
-  const [minutes, setMinutes] = useState(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? parseInt(saved, 10) : 0;
+  // Load weekly totals from localStorage
+  const [weeklyTotals, setWeeklyTotals] = useState<Record<string, number>>(() => {
+    const saved = localStorage.getItem(WEEKLY_TOTALS_KEY);
+    const today = getTodayString();
+    const currentWeekKey = getWeekKey(today);
+    
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // Initialize current week if it doesn't exist
+      if (parsed[currentWeekKey] === undefined) {
+        parsed[currentWeekKey] = 0;
+      }
+      return parsed;
+    }
+    
+    // Initialize with current week
+    return { [currentWeekKey]: 0 };
   });
 
   // Load and manage daily totals
@@ -94,10 +118,39 @@ export default function TimeAccumulator() {
     return { [today]: 0 };
   });
 
-  // Save to localStorage whenever minutes changes
+  // Initialize LAST_WEEK_KEY if it doesn't exist
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, minutes.toString());
-  }, [minutes]);
+    const today = getTodayString();
+    const currentWeekKey = getWeekKey(today);
+    if (!localStorage.getItem(LAST_WEEK_KEY)) {
+      localStorage.setItem(LAST_WEEK_KEY, currentWeekKey);
+    }
+  }, []);
+
+  // Save weekly totals to localStorage
+  useEffect(() => {
+    localStorage.setItem(WEEKLY_TOTALS_KEY, JSON.stringify(weeklyTotals));
+  }, [weeklyTotals]);
+
+  // Check if it's a new week and reset weekly tracking
+  useEffect(() => {
+    const today = getTodayString();
+    const currentWeekKey = getWeekKey(today);
+    const lastWeekKey = localStorage.getItem(LAST_WEEK_KEY);
+    
+    if (lastWeekKey && lastWeekKey !== currentWeekKey) {
+      // New week - clean up old weeks (keep last 4 weeks)
+      const allWeekKeys = Object.keys(weeklyTotals).sort();
+      const weeksToKeep = allWeekKeys.slice(-4);
+      const filtered: Record<string, number> = {};
+      weeksToKeep.forEach(key => {
+        filtered[key] = weeklyTotals[key];
+      });
+      filtered[currentWeekKey] = 0;
+      setWeeklyTotals(filtered);
+      localStorage.setItem(LAST_WEEK_KEY, currentWeekKey);
+    }
+  }, [weeklyTotals]);
 
   // Save daily totals to localStorage
   useEffect(() => {
@@ -119,6 +172,17 @@ export default function TimeAccumulator() {
       filtered[today] = 0;
       localStorage.setItem(LAST_DATE_KEY, today);
       setDailyTotals(filtered);
+      
+      // Reset weekly total if it's a new week
+      const currentWeekKey = getWeekKey(today);
+      const lastWeekKey = localStorage.getItem(LAST_WEEK_KEY);
+      if (lastWeekKey !== currentWeekKey) {
+        setWeeklyTotals(prev => ({
+          ...prev,
+          [currentWeekKey]: 0,
+        }));
+        localStorage.setItem(LAST_WEEK_KEY, currentWeekKey);
+      }
     }
   }, [dailyTotals]);
 
@@ -138,11 +202,19 @@ export default function TimeAccumulator() {
   }, []);
 
   const addMinutes = (amount: number) => {
-    setMinutes(m => m + amount);
     const today = getTodayString();
+    const currentWeekKey = getWeekKey(today);
+    
+    // Update daily total
     setDailyTotals(prev => ({
       ...prev,
       [today]: (prev[today] || 0) + amount,
+    }));
+    
+    // Update weekly total
+    setWeeklyTotals(prev => ({
+      ...prev,
+      [currentWeekKey]: (prev[currentWeekKey] || 0) + amount,
     }));
   };
 
@@ -152,19 +224,44 @@ export default function TimeAccumulator() {
   };
 
   const reset = () => {
-    setMinutes(0);
-    localStorage.removeItem(STORAGE_KEY);
     const today = getTodayString();
-    setDailyTotals({ [today]: 0 });
+    const currentWeekKey = getWeekKey(today);
+    
+    // Reset today's daily total
+    setDailyTotals(prev => ({
+      ...prev,
+      [today]: 0,
+    }));
+    
+    // Reset current week's total
+    setWeeklyTotals(prev => ({
+      ...prev,
+      [currentWeekKey]: 0,
+    }));
+    
     localStorage.setItem(LAST_DATE_KEY, today);
   };
-
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
 
   // Get the currently viewed date
   const viewedDate = getDateOffset(dayOffset);
   const today = getTodayString();
+  const viewedWeekKey = getWeekKey(viewedDate);
+  const currentWeekKey = getWeekKey(today);
+  
+  // Calculate total for the viewed week from daily totals
+  const viewedWeekDays = getWeekForDate(viewedDate);
+  const viewedWeekTotal = viewedWeekDays.reduce((sum, date) => {
+    return sum + (dailyTotals[date] || 0);
+  }, 0);
+  
+  // For the current week, always calculate from daily totals for accuracy
+  // For past weeks, use stored total if available, otherwise calculate from daily totals
+  const displayedMinutes = (viewedWeekKey === currentWeekKey) 
+    ? viewedWeekTotal 
+    : (weeklyTotals[viewedWeekKey] !== undefined ? weeklyTotals[viewedWeekKey] : viewedWeekTotal);
+
+  const hours = Math.floor(displayedMinutes / 60);
+  const mins = displayedMinutes % 60;
 
   // Get weekly data for display (week containing the viewed date)
   const weeklyData = getWeekForDate(viewedDate).map(date => ({
@@ -193,7 +290,8 @@ export default function TimeAccumulator() {
             <div className="flex flex-col gap-0.5">
               <button
                 onClick={() => adjustMinutes(1)}
-                className="text-neutral-400 hover:text-neutral-600 active:text-neutral-900 transition-colors p-0.5 rounded hover:bg-neutral-100 active:scale-95"
+                disabled={dayOffset !== 0}
+                className="text-neutral-400 hover:text-neutral-600 active:text-neutral-900 transition-colors p-0.5 rounded hover:bg-neutral-100 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                 aria-label="Increase by 1 minute"
               >
                 <svg
@@ -213,7 +311,8 @@ export default function TimeAccumulator() {
               </button>
               <button
                 onClick={() => adjustMinutes(-1)}
-                className="text-neutral-400 hover:text-neutral-600 active:text-neutral-900 transition-colors p-0.5 rounded hover:bg-neutral-100 active:scale-95"
+                disabled={dayOffset !== 0}
+                className="text-neutral-400 hover:text-neutral-600 active:text-neutral-900 transition-colors p-0.5 rounded hover:bg-neutral-100 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                 aria-label="Decrease by 1 minute"
               >
                 <svg
@@ -239,13 +338,15 @@ export default function TimeAccumulator() {
         <div className="grid grid-cols-2 gap-3">
           <button
             onClick={() => addMinutes(10)}
-            className="rounded-xl bg-neutral-900 text-white py-3 text-sm font-medium active:scale-95 transition"
+            disabled={dayOffset !== 0}
+            className="rounded-xl bg-neutral-900 text-white py-3 text-sm font-medium active:scale-95 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             +10 min
           </button>
           <button
             onClick={() => addMinutes(25)}
-            className="rounded-xl bg-neutral-900 text-white py-3 text-sm font-medium active:scale-95 transition"
+            disabled={dayOffset !== 0}
+            className="rounded-xl bg-neutral-900 text-white py-3 text-sm font-medium active:scale-95 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             +25 min
           </button>
@@ -253,7 +354,8 @@ export default function TimeAccumulator() {
 
         <button
           onClick={reset}
-          className="rounded-xl border border-neutral-200 py-2 text-sm text-neutral-600 hover:bg-neutral-50 active:scale-95 transition"
+          disabled={dayOffset !== 0}
+          className="rounded-xl border border-neutral-200 py-2 text-sm text-neutral-600 hover:bg-neutral-50 active:scale-95 transition disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Reset
         </button>
