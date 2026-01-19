@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 
-const STORAGE_KEY = "workTimeMinutes";
 const DAILY_STORAGE_KEY = "workTimeDaily";
 const LAST_DATE_KEY = "workTimeLastDate";
 const WEEKLY_TOTALS_KEY = "workTimeWeekly";
@@ -219,7 +218,13 @@ export default function TimeAccumulator() {
   };
 
   const adjustMinutes = (amount: number) => {
-    if (minutes + amount < 0) return; // Prevent negative time
+    const today = getTodayString();
+    const currentWeekKey = getWeekKey(today);
+    const currentWeekDays = getWeekForDate(today);
+    const currentWeekTotal = currentWeekDays.reduce((sum, date) => {
+      return sum + (dailyTotals[date] || 0);
+    }, 0);
+    if (currentWeekTotal + amount < 0) return; // Prevent negative time
     addMinutes(amount);
   };
 
