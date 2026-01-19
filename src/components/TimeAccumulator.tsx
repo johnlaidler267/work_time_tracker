@@ -219,7 +219,6 @@ export default function TimeAccumulator() {
 
   const adjustMinutes = (amount: number) => {
     const today = getTodayString();
-    const currentWeekKey = getWeekKey(today);
     const currentWeekDays = getWeekForDate(today);
     const currentWeekTotal = currentWeekDays.reduce((sum, date) => {
       return sum + (dailyTotals[date] || 0);
