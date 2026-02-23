@@ -861,7 +861,7 @@ export default function TimeAccumulator() {
   return (
     <div className="flex items-center justify-center min-h-screen bg-neutral-100 p-24">
       <div className="fixed top-6 left-6 z-30">
-        <p className="text-neutral-800 font-semibold text-base sm:text-lg" style={{ fontFamily: "'Finger Paint', cursive" }} aria-live="polite">
+        <p className="text-neutral-800 font-semibold text-base sm:text-lg" style={{ fontFamily: "'Macondo', cursive" }} aria-live="polite">
           <span aria-hidden>{greeting.emoji}</span> {greetingMessage}
         </p>
       </div>
@@ -886,7 +886,7 @@ export default function TimeAccumulator() {
           />
           <div className="fixed top-0 right-0 h-full w-80 max-w-[100vw] bg-white shadow-xl z-50 flex flex-col">
             <div className="flex items-center justify-between p-4 border-b border-neutral-100">
-              <h2 className="text-lg font-semibold text-neutral-900" style={{ fontFamily: "'Finger Paint', cursive" }}>Settings</h2>
+              <h2 className="text-lg font-semibold text-neutral-900" style={{ fontFamily: "'Macondo', cursive" }}>Settings</h2>
               <button
                 type="button"
                 onClick={() => setSettingsOpen(false)}
@@ -1170,7 +1170,7 @@ export default function TimeAccumulator() {
           <div className="shrink-0 w-full border-t border-neutral-200 my-2" aria-hidden />
           {/* Bottom half: Top 3 tasks */}
           <div className="flex-1 min-h-0 flex flex-col gap-2 overflow-auto px-3 pb-3">
-            <h3 className="text-xs font-semibold text-neutral-700 shrink-0" style={{ fontFamily: "'Finger Paint', cursive" }}>Top 3</h3>
+            <h3 className="text-xs font-semibold text-neutral-700 shrink-0" style={{ fontFamily: "'Macondo', cursive" }}>Top 3</h3>
             {[0, 1, 2].map((index) => {
               const task = top3Slots[index];
               const hasText = task && task.text.trim() !== "";
@@ -1230,7 +1230,7 @@ export default function TimeAccumulator() {
             {thisWeekArchive.length > 0 && (
               <>
                 <div className="shrink-0 w-full border-t border-neutral-100 mt-1 pt-1.5" />
-                <p className="text-[10px] font-medium text-neutral-500 shrink-0" style={{ fontFamily: "'Finger Paint', cursive" }}>This week</p>
+                <p className="text-[10px] font-medium text-neutral-500 shrink-0" style={{ fontFamily: "'Macondo', cursive" }}>This week</p>
                 <ul className="text-[10px] text-neutral-600 space-y-0.5 overflow-auto min-h-0">
                   {thisWeekArchive.slice(-8).reverse().map((item, i) => (
                     <li key={`${item.completedDate}-${item.text}-${i}`} className="line-through break-words">
@@ -1374,7 +1374,7 @@ export default function TimeAccumulator() {
                 />
               </svg>
             </button>
-            <div className="text-xs font-medium text-neutral-500 text-center" style={{ fontFamily: "'Finger Paint', cursive" }}>
+            <div className="text-xs font-medium text-neutral-500 text-center" style={{ fontFamily: "'Macondo', cursive" }}>
               {dayOffset === 0 ? 'This Week' : dayOffset === -1 ? 'Yesterday' : dayOffset === 1 ? 'Tomorrow' : `${Math.abs(dayOffset)} ${Math.abs(dayOffset) === 1 ? 'day' : 'days'} ${dayOffset > 0 ? 'ahead' : 'ago'}`}
             </div>
             <button
@@ -1472,7 +1472,7 @@ export default function TimeAccumulator() {
         <div className="w-48 h-full min-h-full rounded-r-2xl rounded-l-lg bg-white shadow-sm border border-l-0 border-neutral-200 py-3 px-3 flex flex-col min-h-0">
           <div className="shrink-0 flex flex-col gap-2">
             <div className="flex items-center justify-between gap-1">
-              <h2 className="text-xs font-semibold text-neutral-800" style={{ fontFamily: "'Finger Paint', cursive" }}>Work stats</h2>
+              <h2 className="text-xs font-semibold text-neutral-800" style={{ fontFamily: "'Macondo', cursive" }}>Work stats</h2>
               <button
                 type="button"
                 onClick={() => setStatsOpen(false)}
