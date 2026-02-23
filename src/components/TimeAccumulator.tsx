@@ -1126,7 +1126,7 @@ export default function TimeAccumulator() {
                         </span>
                       </div>
                     </div>
-                    <p className="text-[9px] font-medium uppercase tracking-wider text-neutral-400 text-center leading-tight">
+                    <p className="text-[9px] font-medium uppercase tracking-wider text-neutral-400 text-center leading-tight" style={{ fontFamily: "'Macondo', cursive" }}>
                       {pomodoroMode === "focus" ? "Stay focused" : "Take a break"}
                     </p>
                     <div className="flex items-center justify-center gap-2">
@@ -1314,7 +1314,7 @@ export default function TimeAccumulator() {
               </div>
             )}
           </div>
-          <div className="text-sm text-neutral-500 mt-1">Total Time</div>
+          <div className="text-sm text-neutral-500 mt-1" style={{ fontFamily: "'Macondo', cursive" }}>Total Time</div>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
