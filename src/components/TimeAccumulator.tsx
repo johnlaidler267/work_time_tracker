@@ -17,6 +17,7 @@ const POMODORO_SOUND_KEY = "workTimePomodoroSound";
 const TOP3_DAILY_KEY = "workTimeTop3Daily";
 const TOP3_ARCHIVE_KEY = "workTimeTop3Archive";
 const TOP3_ARCHIVE_CLEARED_KEY = "workTimeTop3ArchiveCleared";
+const TIMEZONE_KEY = "workTimeTimezone";
 
 // Top 3 tasks: one list per day (max 3 items); completed stay in list (crossed out), unchecked carry over to next day
 type Top3Task = { id: string; text: string; done?: boolean };
@@ -51,6 +52,42 @@ function minutesSinceMidnight(d: Date): number {
   return d.getHours() * 60 + d.getMinutes() + d.getSeconds() / 60;
 }
 
+// Get device timezone (e.g. "America/Chicago")
+function getDeviceTimezone(): string {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone;
+  } catch {
+    return "UTC";
+  }
+}
+
+// Minutes since midnight in a specific timezone (for work stats display)
+function minutesSinceMidnightInZone(d: Date, timeZone: string): number {
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    hour: "numeric",
+    minute: "numeric",
+    second: "numeric",
+    hour12: false,
+  });
+  const parts = formatter.formatToParts(d);
+  const hour = parseInt(parts.find((p) => p.type === "hour")?.value ?? "0", 10);
+  const minute = parseInt(parts.find((p) => p.type === "minute")?.value ?? "0", 10);
+  const second = parseInt(parts.find((p) => p.type === "second")?.value ?? "0", 10);
+  return hour * 60 + minute + second / 60;
+}
+
+// Hour of day (0–23) in a specific timezone
+function getHourInZone(d: Date, timeZone: string): number {
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    hour: "numeric",
+    hour12: false,
+  });
+  const parts = formatter.formatToParts(d);
+  return parseInt(parts.find((p) => p.type === "hour")?.value ?? "0", 10);
+}
+
 // Format minutes-since-midnight as "9:42 AM"
 function formatTimeOfDay(mins: number): string {
   const h = Math.floor(mins / 60) % 24;
@@ -69,7 +106,7 @@ export type WorkStats = {
   hasData: boolean;
 };
 
-function computeWorkStats(dailyData: DailyData, retainedDates: string[]): WorkStats {
+function computeWorkStats(dailyData: DailyData, retainedDates: string[], displayTimeZone?: string): WorkStats {
   const daysWithSessions = retainedDates.filter(date => {
     const entry = dailyData[date];
     return entry && typeof entry === "object" && "sessions" in entry && entry.sessions.length >= 1;
@@ -86,6 +123,10 @@ function computeWorkStats(dailyData: DailyData, retainedDates: string[]): WorkSt
     };
   }
 
+  const tz = displayTimeZone ?? getDeviceTimezone();
+  const minsSinceMidnight = (d: Date) => (displayTimeZone ? minutesSinceMidnightInZone(d, tz) : minutesSinceMidnight(d));
+  const hourFor = (d: Date) => (displayTimeZone ? getHourInZone(d, tz) : d.getHours());
+
   let sumStartMins = 0;
   let sumEndMins = 0;
   let sumDurationMs = 0;
@@ -101,14 +142,14 @@ function computeWorkStats(dailyData: DailyData, retainedDates: string[]): WorkSt
     const endMs = new Date(last.at).getTime();
     const startDate = new Date(startMs);
     const endDate = new Date(endMs);
-    sumStartMins += minutesSinceMidnight(startDate);
-    sumEndMins += minutesSinceMidnight(endDate);
+    sumStartMins += minsSinceMidnight(startDate);
+    sumEndMins += minsSinceMidnight(endDate);
     sumDurationMs += endMs - startMs;
     sumDailyMinutes += entry.total;
 
     for (const s of sessions) {
       const d = new Date(s.at);
-      const hour = d.getHours();
+      const hour = hourFor(d);
       hourBuckets[hour] = (hourBuckets[hour] ?? 0) + s.minutes;
     }
   }
@@ -280,6 +321,8 @@ export default function TimeAccumulator() {
   });
   // User's name (for display/personalization)
   const [userName, setUserName] = useState<string>(() => localStorage.getItem(USER_NAME_KEY) ?? "");
+  // Display timezone for work stats (empty = use device timezone)
+  const [displayTimezone, setDisplayTimezone] = useState<string>(() => localStorage.getItem(TIMEZONE_KEY) ?? "");
   // Daily time goal in minutes (null = no goal set)
   const [dailyGoalMinutes, setDailyGoalMinutes] = useState<number | null>(() => {
     const saved = localStorage.getItem(DAILY_GOAL_KEY);
@@ -428,6 +471,15 @@ export default function TimeAccumulator() {
       localStorage.setItem(USER_NAME_KEY, userName.trim());
     }
   }, [userName]);
+
+  // Save display timezone to localStorage
+  useEffect(() => {
+    if (displayTimezone === "") {
+      localStorage.removeItem(TIMEZONE_KEY);
+    } else {
+      localStorage.setItem(TIMEZONE_KEY, displayTimezone);
+    }
+  }, [displayTimezone]);
 
   // Save daily goal to localStorage
   useEffect(() => {
@@ -659,7 +711,11 @@ export default function TimeAccumulator() {
   // Find max minutes for scaling the bars
   const maxMinutes = Math.max(...weeklyData.map(d => d.minutes), 1);
 
-  const workStats = computeWorkStats(dailyData, getRetainedDailyDates(today, RETENTION_WEEKS));
+  const workStats = computeWorkStats(
+    dailyData,
+    getRetainedDailyDates(today, RETENTION_WEEKS),
+    displayTimezone === "" ? undefined : displayTimezone
+  );
 
   const todayTop3List = dailyTop3[today] ?? [];
   const top3Slots: (Top3Task | null)[] = [
@@ -805,7 +861,7 @@ export default function TimeAccumulator() {
   return (
     <div className="flex items-center justify-center min-h-screen bg-neutral-100 p-24">
       <div className="fixed top-6 left-6 z-30">
-        <p className="text-neutral-800 font-semibold text-base sm:text-lg" style={{ fontFamily: "'Dancing Script', cursive" }} aria-live="polite">
+        <p className="text-neutral-800 font-semibold text-base sm:text-lg" style={{ fontFamily: "'Finger Paint', cursive" }} aria-live="polite">
           <span aria-hidden>{greeting.emoji}</span> {greetingMessage}
         </p>
       </div>
@@ -830,7 +886,7 @@ export default function TimeAccumulator() {
           />
           <div className="fixed top-0 right-0 h-full w-80 max-w-[100vw] bg-white shadow-xl z-50 flex flex-col">
             <div className="flex items-center justify-between p-4 border-b border-neutral-100">
-              <h2 className="text-lg font-semibold text-neutral-900">Settings</h2>
+              <h2 className="text-lg font-semibold text-neutral-900" style={{ fontFamily: "'Finger Paint', cursive" }}>Settings</h2>
               <button
                 type="button"
                 onClick={() => setSettingsOpen(false)}
@@ -855,6 +911,30 @@ export default function TimeAccumulator() {
                   placeholder="Your name"
                   className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-400"
                 />
+              </div>
+              <div>
+                <label htmlFor="settings-timezone" className="block text-sm font-medium text-neutral-700 mb-2">
+                  Work stats timezone
+                </label>
+                <p className="text-xs text-neutral-500 mb-2">
+                  Times in work stats (e.g. average start) are shown in this timezone
+                </p>
+                <select
+                  id="settings-timezone"
+                  value={displayTimezone}
+                  onChange={(e) => setDisplayTimezone(e.target.value)}
+                  className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm text-neutral-900 focus:border-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-400"
+                >
+                  <option value="">Use device timezone</option>
+                  <option value="America/New_York">Eastern (New York)</option>
+                  <option value="America/Chicago">Central (Chicago / New Orleans)</option>
+                  <option value="America/Denver">Mountain (Denver)</option>
+                  <option value="America/Phoenix">Arizona (no DST)</option>
+                  <option value="America/Los_Angeles">Pacific (Los Angeles)</option>
+                  <option value="America/Anchorage">Alaska</option>
+                  <option value="Pacific/Honolulu">Hawaii</option>
+                  <option value="UTC">UTC</option>
+                </select>
               </div>
               <div>
                 <label htmlFor="daily-goal-hours" className="block text-sm font-medium text-neutral-700 mb-2">
@@ -1090,7 +1170,7 @@ export default function TimeAccumulator() {
           <div className="shrink-0 w-full border-t border-neutral-200 my-2" aria-hidden />
           {/* Bottom half: Top 3 tasks */}
           <div className="flex-1 min-h-0 flex flex-col gap-2 overflow-auto px-3 pb-3">
-            <h3 className="text-xs font-semibold text-neutral-700 shrink-0">Top 3</h3>
+            <h3 className="text-xs font-semibold text-neutral-700 shrink-0" style={{ fontFamily: "'Finger Paint', cursive" }}>Top 3</h3>
             {[0, 1, 2].map((index) => {
               const task = top3Slots[index];
               const hasText = task && task.text.trim() !== "";
@@ -1150,7 +1230,7 @@ export default function TimeAccumulator() {
             {thisWeekArchive.length > 0 && (
               <>
                 <div className="shrink-0 w-full border-t border-neutral-100 mt-1 pt-1.5" />
-                <p className="text-[10px] font-medium text-neutral-500 shrink-0">This week</p>
+                <p className="text-[10px] font-medium text-neutral-500 shrink-0" style={{ fontFamily: "'Finger Paint', cursive" }}>This week</p>
                 <ul className="text-[10px] text-neutral-600 space-y-0.5 overflow-auto min-h-0">
                   {thisWeekArchive.slice(-8).reverse().map((item, i) => (
                     <li key={`${item.completedDate}-${item.text}-${i}`} className="line-through truncate">
@@ -1294,7 +1374,7 @@ export default function TimeAccumulator() {
                 />
               </svg>
             </button>
-            <div className="text-xs font-medium text-neutral-500 text-center">
+            <div className="text-xs font-medium text-neutral-500 text-center" style={{ fontFamily: "'Finger Paint', cursive" }}>
               {dayOffset === 0 ? 'This Week' : dayOffset === -1 ? 'Yesterday' : dayOffset === 1 ? 'Tomorrow' : `${Math.abs(dayOffset)} ${Math.abs(dayOffset) === 1 ? 'day' : 'days'} ${dayOffset > 0 ? 'ahead' : 'ago'}`}
             </div>
             <button
@@ -1392,7 +1472,7 @@ export default function TimeAccumulator() {
         <div className="w-48 h-full min-h-full rounded-r-2xl rounded-l-lg bg-white shadow-sm border border-l-0 border-neutral-200 py-3 px-3 flex flex-col min-h-0">
           <div className="shrink-0 flex flex-col gap-2">
             <div className="flex items-center justify-between gap-1">
-              <h2 className="text-xs font-semibold text-neutral-800">Work stats</h2>
+              <h2 className="text-xs font-semibold text-neutral-800" style={{ fontFamily: "'Finger Paint', cursive" }}>Work stats</h2>
               <button
                 type="button"
                 onClick={() => setStatsOpen(false)}
