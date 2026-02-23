@@ -1177,7 +1177,7 @@ export default function TimeAccumulator() {
               const isDone = task?.done === true;
               const canCheckOff = hasText && !isDone;
               return (
-                <div key={task?.id ?? `empty-${index}`} className="flex items-center gap-1.5 shrink-0 pl-px">
+                <div key={index} className="flex items-start gap-1.5 pl-px">
                   <button
                     type="button"
                     tabIndex={-1}
@@ -1199,7 +1199,7 @@ export default function TimeAccumulator() {
                     )}
                   </button>
                   {isDone ? (
-                    <span className="flex-1 min-w-0 text-xs py-0.5 text-neutral-500 line-through truncate">
+                    <span className="flex-1 min-w-0 text-xs py-0.5 text-neutral-500 line-through break-words">
                       {task.text}
                     </span>
                   ) : (
@@ -1233,7 +1233,7 @@ export default function TimeAccumulator() {
                 <p className="text-[10px] font-medium text-neutral-500 shrink-0" style={{ fontFamily: "'Finger Paint', cursive" }}>This week</p>
                 <ul className="text-[10px] text-neutral-600 space-y-0.5 overflow-auto min-h-0">
                   {thisWeekArchive.slice(-8).reverse().map((item, i) => (
-                    <li key={`${item.completedDate}-${item.text}-${i}`} className="line-through truncate">
+                    <li key={`${item.completedDate}-${item.text}-${i}`} className="line-through break-words">
                       {item.text}
                     </li>
                   ))}
