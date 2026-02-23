@@ -1003,85 +1003,82 @@ export default function TimeAccumulator() {
         aria-hidden={!leftPanelOpen}
       >
         <div className="h-full w-48 rounded-l-2xl rounded-r-lg bg-white shadow-sm border border-r-0 border-neutral-200 overflow-hidden flex flex-col min-h-0">
-          {/* Top half: Pomodoro — fixed stack, no flex-grow, fits container */}
-          <div className="flex-none h-1/2 w-full flex flex-col min-h-0 overflow-hidden">
+          {/* Top half: Pomodoro — content + sessions bar extends to divider */}
+          <div className="flex-none h-1/2 w-full flex flex-col min-h-0">
             {showPomodoro ? (
               <>
-                {/* Tabs */}
-                <div className="flex border-b border-neutral-100 shrink-0">
-                  {(["focus", "short", "long"] as const).map((mode) => (
-                    <button
-                      key={mode}
-                      type="button"
-                      onClick={() => pomodoroSelectMode(mode)}
-                      className={`flex-1 py-2 text-[10px] font-semibold uppercase tracking-wider transition-colors ${
-                        pomodoroMode === mode ? "bg-red-50 text-red-600" : "text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50"
-                      }`}
+                <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+                  {/* Tabs */}
+                  <div className="flex border-b border-neutral-100 shrink-0">
+                    {(["focus", "short", "long"] as const).map((mode) => (
+                      <button
+                        key={mode}
+                        type="button"
+                        onClick={() => pomodoroSelectMode(mode)}
+                        className={`flex-1 py-2 text-[10px] font-semibold uppercase tracking-wider transition-colors ${
+                          pomodoroMode === mode ? "bg-red-50 text-red-600" : "text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50"
+                        }`}
+                      >
+                        {mode === "focus" ? "Focus" : mode === "short" ? "Short" : "Long"}
+                      </button>
+                    ))}
+                  </div>
+                  {/* Timer + label + controls: vertical stack, no overlap */}
+                  <div className="shrink-0 flex flex-col items-center pt-4 pb-2 px-3 gap-3">
+                    <div
+                      className="relative flex items-center justify-center shrink-0 rounded-full"
+                      style={{ width: POMODORO_RING_DISPLAY_PX, height: POMODORO_RING_DISPLAY_PX }}
                     >
-                      {mode === "focus" ? "Focus" : mode === "short" ? "Short" : "Long"}
-                    </button>
-                  ))}
-                </div>
-                {/* Timer + label + controls: vertical stack, no overlap */}
-                <div className="shrink-0 flex flex-col items-center pt-4 pb-2 px-3 gap-3">
-                  <div
-                    className="relative flex items-center justify-center shrink-0 rounded-full"
-                    style={{ width: POMODORO_RING_DISPLAY_PX, height: POMODORO_RING_DISPLAY_PX }}
-                  >
-                    <svg
-                      width="100%"
-                      height="100%"
-                      viewBox={`0 0 ${POMODORO_RING_SIZE} ${POMODORO_RING_SIZE}`}
-                      className="-rotate-90 block"
-                      preserveAspectRatio="xMidYMid meet"
-                      aria-hidden
-                    >
-                      <circle cx={POMODORO_RING_SIZE / 2} cy={POMODORO_RING_SIZE / 2} r={pomodoroRingRadius} fill="none" stroke="currentColor" strokeWidth={POMODORO_RING_STROKE} className="text-neutral-200" />
-                      <circle cx={POMODORO_RING_SIZE / 2} cy={POMODORO_RING_SIZE / 2} r={pomodoroRingRadius} fill="none" stroke="currentColor" strokeWidth={POMODORO_RING_STROKE} strokeDasharray={pomodoroRingCircumference} strokeDashoffset={pomodoroRingOffset} strokeLinecap="round" className="text-red-500 transition-all duration-1000" />
-                    </svg>
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <span className="tabular-nums text-sm font-bold text-neutral-800">
-                        {String(pomodoroDisplayM).padStart(2, "0")}:{String(pomodoroDisplayS).padStart(2, "0")}
-                      </span>
+                      <svg
+                        width="100%"
+                        height="100%"
+                        viewBox={`0 0 ${POMODORO_RING_SIZE} ${POMODORO_RING_SIZE}`}
+                        className="-rotate-90 block"
+                        preserveAspectRatio="xMidYMid meet"
+                        aria-hidden
+                      >
+                        <circle cx={POMODORO_RING_SIZE / 2} cy={POMODORO_RING_SIZE / 2} r={pomodoroRingRadius} fill="none" stroke="currentColor" strokeWidth={POMODORO_RING_STROKE} className="text-neutral-200" />
+                        <circle cx={POMODORO_RING_SIZE / 2} cy={POMODORO_RING_SIZE / 2} r={pomodoroRingRadius} fill="none" stroke="currentColor" strokeWidth={POMODORO_RING_STROKE} strokeDasharray={pomodoroRingCircumference} strokeDashoffset={pomodoroRingOffset} strokeLinecap="round" className="text-red-500 transition-all duration-1000" />
+                      </svg>
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <span className="tabular-nums text-sm font-bold text-neutral-800">
+                          {String(pomodoroDisplayM).padStart(2, "0")}:{String(pomodoroDisplayS).padStart(2, "0")}
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-[9px] font-medium uppercase tracking-wider text-neutral-400 text-center leading-tight">
+                      {pomodoroMode === "focus" ? "Stay focused" : "Take a break"}
+                    </p>
+                    <div className="flex items-center justify-center gap-2">
+                      <button type="button" onClick={pomodoroReset} className="p-1.5 text-neutral-500 hover:text-neutral-700 rounded-full hover:bg-neutral-100 transition-colors" aria-label="Reset">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3.5 h-3.5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                        </svg>
+                      </button>
+                      <button type="button" onClick={pomodoroStartPause} className="w-8 h-8 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center text-white shadow transition-all active:scale-95" aria-label={pomodoroRunning ? "Pause" : `Start (${pomodoroSessions} sessions)`}>
+                        {pomodoroRunning ? (
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3">
+                            <path fillRule="evenodd" d="M6.75 5.25a.75.75 0 01.75-.75H9a.75.75 0 01.75.75v13.5a.75.75 0 01-.75.75H7.5a.75.75 0 01-.75-.75V5.25zm7.5 0A.75.75 0 0115 4.5h1.5a.75.75 0 01.75.75v13.5a.75.75 0 01-.75.75H15a.75.75 0 01-.75-.75V5.25z" clipRule="evenodd" />
+                          </svg>
+                        ) : (
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5 ml-0.5">
+                            <path fillRule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.991c-1.25.687-2.779-.217-2.779-1.643V5.653z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </button>
+                      <button type="button" onClick={() => setPomodoroSoundOn((v) => !v)} className="p-1.5 text-neutral-500 hover:text-neutral-700 rounded-full hover:bg-neutral-100 transition-colors" aria-label={pomodoroSoundOn ? "Sound on" : "Sound off"}>
+                        {pomodoroSoundOn ? (
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5">
+                            <path d="M13.5 4.06c0-1.336-1.616-2.005-2.56-1.06l-4.5 4.5H4.508c-1.141 0-2.318.664-2.66 1.905A9.76 9.76 0 001.5 12c0 .898.121 1.768.35 2.595.341 1.24 1.518 1.905 2.659 1.905h1.93l4.5 4.5c.945.945 2.561.276 2.561-1.06V4.06z" />
+                          </svg>
+                        ) : (
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5">
+                            <path d="M13.5 4.06c0-1.336-1.616-2.005-2.56-1.06l-4.5 4.5H4.508c-1.141 0-2.318.664-2.66 1.905A9.76 9.76 0 001.5 12c0 .898.121 1.768.35 2.595.341 1.24 1.518 1.905 2.659 1.905h1.93l4.5 4.5c.945.945 2.561.276 2.561-1.06V4.06zM17.78 9.22a.75.75 0 10-1.06 1.06L18.44 12l-1.72 1.72a.75.75 0 001.06 1.06l1.72-1.72 1.72 1.72a.75.75 0 101.06-1.06L19.5 12l1.72-1.72a.75.75 0 00-1.06-1.06L18.44 12l-1.72-1.72z" />
+                          </svg>
+                        )}
+                      </button>
                     </div>
                   </div>
-                  <p className="text-[9px] font-medium uppercase tracking-wider text-neutral-400 text-center leading-tight">
-                    {pomodoroMode === "focus" ? "Stay focused" : "Take a break"}
-                  </p>
-                  <div className="flex items-center justify-center gap-2">
-                    <button type="button" onClick={pomodoroReset} className="p-1.5 text-neutral-500 hover:text-neutral-700 rounded-full hover:bg-neutral-100 transition-colors" aria-label="Reset">
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3.5 h-3.5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-                      </svg>
-                    </button>
-                    <button type="button" onClick={pomodoroStartPause} className="w-8 h-8 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center text-white shadow transition-all active:scale-95" aria-label={pomodoroRunning ? "Pause" : "Start"}>
-                      {pomodoroRunning ? (
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3">
-                          <path fillRule="evenodd" d="M6.75 5.25a.75.75 0 01.75-.75H9a.75.75 0 01.75.75v13.5a.75.75 0 01-.75.75H7.5a.75.75 0 01-.75-.75V5.25zm7.5 0A.75.75 0 0115 4.5h1.5a.75.75 0 01.75.75v13.5a.75.75 0 01-.75.75H15a.75.75 0 01-.75-.75V5.25z" clipRule="evenodd" />
-                        </svg>
-                      ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5 ml-0.5">
-                          <path fillRule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.991c-1.25.687-2.779-.217-2.779-1.643V5.653z" clipRule="evenodd" />
-                        </svg>
-                      )}
-                    </button>
-                    <button type="button" onClick={() => setPomodoroSoundOn((v) => !v)} className="p-1.5 text-neutral-500 hover:text-neutral-700 rounded-full hover:bg-neutral-100 transition-colors" aria-label={pomodoroSoundOn ? "Sound on" : "Sound off"}>
-                      {pomodoroSoundOn ? (
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5">
-                          <path d="M13.5 4.06c0-1.336-1.616-2.005-2.56-1.06l-4.5 4.5H4.508c-1.141 0-2.318.664-2.66 1.905A9.76 9.76 0 001.5 12c0 .898.121 1.768.35 2.595.341 1.24 1.518 1.905 2.659 1.905h1.93l4.5 4.5c.945.945 2.561.276 2.561-1.06V4.06z" />
-                        </svg>
-                      ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5">
-                          <path d="M13.5 4.06c0-1.336-1.616-2.005-2.56-1.06l-4.5 4.5H4.508c-1.141 0-2.318.664-2.66 1.905A9.76 9.76 0 001.5 12c0 .898.121 1.768.35 2.595.341 1.24 1.518 1.905 2.659 1.905h1.93l4.5 4.5c.945.945 2.561.276 2.561-1.06V4.06zM17.78 9.22a.75.75 0 10-1.06 1.06L18.44 12l-1.72 1.72a.75.75 0 001.06 1.06l1.72-1.72 1.72 1.72a.75.75 0 101.06-1.06L19.5 12l1.72-1.72a.75.75 0 00-1.06-1.06L18.44 12l-1.72-1.72z" />
-                        </svg>
-                      )}
-                    </button>
-                  </div>
-                </div>
-                {/* Sessions footer */}
-                <div className="flex items-center justify-between px-3 py-2 bg-neutral-50 border-t border-neutral-100 text-[9px] text-neutral-500 shrink-0 mt-auto">
-                  <span>Sessions: {pomodoroSessions}</span>
-                  <span>{pomodoroSoundOn ? "Sound on" : "Sound off"}</span>
                 </div>
               </>
             ) : (
