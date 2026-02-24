@@ -291,6 +291,8 @@ export default function TimeAccumulator() {
   const [isEditingPastDay, setIsEditingPastDay] = useState(false);
   // Settings panel
   const [settingsOpen, setSettingsOpen] = useState(false);
+  // Completed tasks sidebar
+  const [archiveOpen, setArchiveOpen] = useState(false);
   // Stats dashboard (expandable)
   const [statsOpen, setStatsOpen] = useState(false);
   // Left panel (Pomodoro) expandable
@@ -865,17 +867,30 @@ export default function TimeAccumulator() {
           <span aria-hidden>{greeting.emoji}</span> {greetingMessage}
         </p>
       </div>
-      <button
-        type="button"
-        onClick={() => setSettingsOpen(true)}
-        className="fixed top-6 right-6 p-3 text-neutral-400 hover:text-neutral-600 active:text-neutral-900 rounded-lg hover:bg-neutral-200/80 active:scale-95 transition-colors"
-        aria-label="Settings"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-9 h-9">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 010 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 010-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-        </svg>
-      </button>
+      <div className="fixed top-6 right-6 z-30 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setArchiveOpen(true)}
+          className="p-3 text-neutral-400 hover:text-neutral-600 active:text-neutral-900 rounded-lg hover:bg-neutral-200/80 active:scale-95 transition-colors"
+          aria-label="Completed tasks"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-9 h-9">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75l2.25 2.25L15 9.75" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 6.75A2.25 2.25 0 016.75 4.5h10.5A2.25 2.25 0 0119.5 6.75v10.5A2.25 2.25 0 0117.25 19.5H6.75A2.25 2.25 0 014.5 17.25V6.75z" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          onClick={() => setSettingsOpen(true)}
+          className="p-3 text-neutral-400 hover:text-neutral-600 active:text-neutral-900 rounded-lg hover:bg-neutral-200/80 active:scale-95 transition-colors"
+          aria-label="Settings"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-9 h-9">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 010 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 010-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        </button>
+      </div>
 
       {settingsOpen && (
         <>
@@ -1006,6 +1021,52 @@ export default function TimeAccumulator() {
         </>
       )}
 
+      {archiveOpen && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/20 z-40"
+            aria-hidden
+            onClick={() => setArchiveOpen(false)}
+          />
+          <div className="fixed top-0 right-0 h-full w-80 max-w-[100vw] bg-white shadow-xl z-50 flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b border-neutral-100">
+              <h2 className="text-lg font-semibold text-neutral-900" style={{ fontFamily: "'Macondo', cursive" }}>Completed this week</h2>
+              <button
+                type="button"
+                onClick={() => setArchiveOpen(false)}
+                className="p-2 text-neutral-400 hover:text-neutral-600 rounded-lg hover:bg-neutral-100 transition-colors"
+                aria-label="Close completed tasks"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-4 flex-1 min-h-0 overflow-y-auto">
+              {thisWeekArchive.length === 0 ? (
+                <p className="text-xs text-neutral-500">No completed Top 3 tasks yet this week.</p>
+              ) : (
+                <ul className="space-y-1 text-xs text-neutral-700">
+                  {thisWeekArchive.slice().reverse().map((item, index) => (
+                    <li key={`${item.completedDate}-${item.text}-${index}`} className="flex items-start gap-2">
+                      <span className="mt-[2px] inline-flex h-3 w-3 rounded-full bg-emerald-100 border border-emerald-300 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[10px] text-neutral-400 mb-0.5">
+                          {item.completedDate}
+                        </div>
+                        <div className="text-[11px] text-neutral-700 line-through break-words">
+                          {item.text}
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+
       {/* Time left — fixed top center so always visible (like settings gear) */}
       <div className="fixed top-6 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-0.5 text-sm tabular-nums bg-white/95 px-4 py-2.5 rounded-xl border border-neutral-200 shadow-md min-w-[200px]">
         {dailyGoalMinutes != null && dailyGoalMinutes > 0 && (viewedWeekKey === currentWeekKey || dayOffset === 0) ? (
@@ -1017,9 +1078,11 @@ export default function TimeAccumulator() {
               const rHours = Math.floor(absRemaining / 60);
               const rMins = absRemaining % 60;
               const formatted = rHours > 0 ? `${rHours}h ${rMins}m` : `${rMins}m`;
+              const dailyPct = dailyGoalMinutes > 0 ? Math.round((todayTotal / dailyGoalMinutes) * 100) : 0;
               return (
                 <span className={remaining >= 0 ? 'text-neutral-700' : 'text-amber-600'}>
                   Today: {remaining >= 0 ? `${formatted} remaining` : `${formatted} over goal`}
+                  <span className="text-neutral-500 font-normal"> ({dailyPct}% completed)</span>
                 </span>
               );
             })()}
@@ -1031,9 +1094,11 @@ export default function TimeAccumulator() {
               const rHours = Math.floor(absRemaining / 60);
               const rMins = absRemaining % 60;
               const formatted = rHours > 0 ? `${rHours}h ${rMins}m` : `${rMins}m`;
+              const weeklyPct = weekTargetMinutes > 0 ? Math.round((currentWeekTotal / weekTargetMinutes) * 100) : 0;
               return (
                 <span className={weekRemaining >= 0 ? 'text-neutral-600' : 'text-amber-600'}>
                   Week: {weekRemaining >= 0 ? `${formatted} left` : `${formatted} over`}
+                  <span className="text-neutral-500 font-normal"> ({weeklyPct}% completed)</span>
                 </span>
               );
             })()}
@@ -1199,47 +1264,21 @@ export default function TimeAccumulator() {
                     )}
                   </button>
                   {isDone ? (
-                    <span className="flex-1 min-w-0 text-xs py-0.5 text-neutral-500 line-through break-words">
+                    <span className="flex-1 min-w-0 text-[11px] py-0.5 text-neutral-500 line-through break-words leading-snug">
                       {task.text}
                     </span>
                   ) : (
-                    <input
-                      type="text"
+                    <textarea
                       value={task?.text ?? ""}
                       onChange={(e) => updateTop3Task(index, e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === " ") {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          const input = e.currentTarget;
-                          const start = input.selectionStart ?? 0;
-                          const end = input.selectionEnd ?? start;
-                          const v = task?.text ?? "";
-                          const newVal = v.slice(0, start) + " " + v.slice(end);
-                          updateTop3Task(index, newVal);
-                          requestAnimationFrame(() => input.setSelectionRange(start + 1, start + 1));
-                        }
-                      }}
+                      rows={2}
                       placeholder="Add task..."
-                      className="flex-1 min-w-0 text-xs py-0.5 px-1 border-0 border-b border-transparent hover:border-neutral-200 focus:border-neutral-400 focus:outline-none bg-transparent rounded placeholder:text-neutral-400"
+                      className="flex-1 min-w-0 text-[11px] leading-snug py-0.5 px-1 border-0 border-b border-transparent hover:border-neutral-200 focus:border-neutral-400 focus:outline-none bg-transparent rounded placeholder:text-neutral-400 resize-none"
                     />
                   )}
                 </div>
               );
             })}
-            {thisWeekArchive.length > 0 && (
-              <>
-                <div className="shrink-0 w-full border-t border-neutral-100 mt-1 pt-1.5" />
-                <p className="text-[10px] font-medium text-neutral-500 shrink-0" style={{ fontFamily: "'Macondo', cursive" }}>This week</p>
-                <ul className="text-[10px] text-neutral-600 space-y-0.5 overflow-auto min-h-0">
-                  {thisWeekArchive.slice(-8).reverse().map((item, i) => (
-                    <li key={`${item.completedDate}-${item.text}-${i}`} className="line-through break-words">
-                      {item.text}
-                    </li>
-                  ))}
-                </ul>
-              </>
-            )}
           </div>
         </div>
       </div>
@@ -1410,13 +1449,22 @@ export default function TimeAccumulator() {
               const weeklyGoalMinutes = (dailyGoalMinutes ?? 0) * 5;
               const isWorkDay = dayIndex >= 1 && dayIndex <= 5; // 1=Mon .. 5=Fri (0=Sun, 6=Sat)
               const minutesBeforeThisDay = isWorkDay ? weeklyData.slice(1, dayIndex).reduce((s, d) => s + d.minutes, 0) : 0;
-              const daysLeftFromHere = isWorkDay ? 6 - dayIndex : 0; // Mon: 5, Tue: 4, ..., Fri: 1
+              const daysLeftFromHere = isWorkDay ? 6 - dayIndex : 0; // Mon: 5, Tue: 4, ..., Fri: 1 (inclusive of this day)
               const remainingToGoal = Math.max(0, weeklyGoalMinutes - minutesBeforeThisDay);
               const minNeededThisDay = (isWorkDay && daysLeftFromHere > 0) ? Math.ceil(remainingToGoal / daysLeftFromHere) : 0;
-              const minH = Math.floor(minNeededThisDay / 60);
-              const minM = minNeededThisDay % 60;
-              const minLabel = minNeededThisDay > 0 ? (minH > 0 ? `≥${minH}h ${minM}m` : `≥${minM}m`) : null;
-              const showMinIndicator = (viewedWeekKey === currentWeekKey) && (dailyGoalMinutes != null && dailyGoalMinutes > 0) && isWorkDay && minLabel !== null;
+              // For "today", show the remaining amount needed *today* to stay on track (so it updates as you log time).
+              // For future days, show the full per-day minimum from that day forward.
+              const minNeededForLabel = isToday ? Math.max(0, minNeededThisDay - minutes) : minNeededThisDay;
+              const labelH = Math.floor(minNeededForLabel / 60);
+              const labelM = minNeededForLabel % 60;
+              const minLabel = minNeededForLabel > 0 ? (labelH > 0 ? `≥${labelH}h ${labelM}m` : `≥${labelM}m`) : null;
+              const isPastDay = date < today;
+              const showMinIndicator =
+                (viewedWeekKey === currentWeekKey) &&
+                (dailyGoalMinutes != null && dailyGoalMinutes > 0) &&
+                isWorkDay &&
+                !isPastDay &&
+                minLabel !== null;
 
               return (
                 <div key={date} className="flex-1 min-w-0 flex flex-col items-center h-full justify-end gap-1">
@@ -1455,7 +1503,7 @@ export default function TimeAccumulator() {
                     {dayName}
                   </div>
                   {showMinIndicator && (
-                    <div className="text-[8px] text-slate-400 font-normal italic shrink-0 whitespace-nowrap overflow-hidden text-ellipsis max-w-full" title={`Min to stay on weekly goal: ${minH > 0 ? `${minH}h ${minM}m` : `${minM}m`}`}>
+                    <div className="text-[8px] text-slate-400 font-normal italic shrink-0 whitespace-nowrap overflow-hidden text-ellipsis max-w-full" title={`Min to stay on weekly goal: ${labelH > 0 ? `${labelH}h ${labelM}m` : `${labelM}m`}`}>
                       {minLabel}
                     </div>
                   )}
